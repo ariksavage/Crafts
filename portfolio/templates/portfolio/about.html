@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block meta_title_text %}About{% endblock %}
+{% block page_title_text %}About{% endblock %}
+{% block content %}
+<p>Here's what I do:</p>
+	<ul class="crafts">
+		{% for craft in crafts %}
+			<li>{{ craft }}</li>
+			{% empty %}<li>I don't do much</li>
+		{% endfor %}
+	</ul>
+{% endblock %}
