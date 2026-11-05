@@ -8,7 +8,7 @@ Steps match `ROADMAP.md`.
 - [x] 3. First app, URLs, function views
 - [x] 4. Templates
 - [x] 5. Models, ORM, migrations
-- [ ] 6. The Django admin
+- [x] 6. The Django admin
 - [ ] 7. Media uploads and images
 - [ ] 8. Class-based views and the public site
 - [ ] 9. Static files
@@ -127,6 +127,37 @@ Steps match `ROADMAP.md`.
 - **Deferred to Step 7:** automatic per-project photo numbering (override `save()` with a
   `Max` aggregate).
 
+### Step 6 (done 2026-11-05)
+
+- Superuser created with `createsuperuser`. Admin at http://localhost:8001/admin/.
+- `portfolio/admin.py`:
+  - `ProjectAdmin`: `list_display` (title, made_on, featured), `search_fields` (title,
+    description, materials, `tags__name`), `list_filter` (featured, tags, made_on),
+    `prepopulated_fields` slug ← title, `inlines = (PhotoInline,)`.
+  - `PhotoInline(TabularInline)` with `extra = 1`.
+  - `TagAdmin`: `list_display` (name, slug), slug prepopulated from name.
+  - `Photo` stays registered on its own (plain `register`) so all photos can be seen in one list.
+  - `Visit` deliberately not registered (it was a teaching model).
+- Covered: auth users, `is_staff`/`is_superuser`, password hashing (`set_password` ≈
+  `password_hash`, never assign `password` directly), admin autodiscovery of each app's
+  `admin.py`, explicit registration (no automatic model admin), widgets derived from field
+  types, form validation (unique check) vs DB constraint (`IntegrityError` from the shell),
+  `ModelAdmin` subclasses as declarative config and passing a class (not an instance) to
+  `register()`, M2M not allowed in `list_display` (`admin.E109`), NULL sort order (SQLite:
+  smallest; PostgreSQL: largest; `nulls_last=`), the admin's pk tie-breaker, `search_fields`
+  (`icontains`, OR across fields, AND across words, `relation__field` uses the *field* name,
+  reverse uses `related_name`), `list_filter` (query-string params are ORM lookups, e.g.
+  `made_on__isnull=True`), `prepopulated_fields` (client-side, add form only), the
+  one-element tuple trap `("title",)`, `# noqa: RUF012` for false positives on class-level
+  dicts, inlines and formsets.
+- **Carried forward:**
+  - Step 7: drag-and-drop photo reordering (`django-admin-sortable2` or hand-written JS over a
+    hidden `order` field), and a `PhotoAdmin` with project column and thumbnail.
+  - Step 10: if RUF012 keeps appearing (forms), replace `noqa` comments with a project
+    `ruff.toml`.
+  - Step 12: remove or replace `Visit` before deploying (a `DeleteModel` migration).
+  - `@admin.register` decorator not introduced yet (Python decorators to come).
+
 ### Gotchas and decisions
 
 - **Python 2.7 is on `PATH` outside a venv.** An old python.org framework install means plain
@@ -135,10 +166,11 @@ Steps match `ROADMAP.md`.
 - Spelling: use American `color` in project code. Mixing `colour`/`color` caused bugs in
   exercises.
 - Dev-only tools (ruff, etc.) go in `requirements-dev.txt`, not `requirements.txt`.
-- Git repo initialised on `main` with no commits yet. Recommended before Step 6, since there
-  are now five generated migrations to track. `.gitignore` covers
-  `*.sublime-workspace` and `*.sublime-project`. `SECRET_KEY` in `settings.py` is the dev key;
-  it moves to env in Step 12.
+- Git: first commit `0257da0` ("initial commit, before Django admin"). Eric is adding a remote
+  repo. **From now on, commit after each exercise and at the end of each step.**
+  `.gitignore` covers `*.sublime-workspace` (`craft.sublime-project` is tracked). `SECRET_KEY`
+  in `settings.py` is the dev key; it moves to env in Step 12, and must not be reused in prod
+  since it's now in git history.
 - `~/.editorconfig` still needs an `[*.html]` section (templates use tabs; it's easy to end up
   with mixed indentation).
 - Teaching preferences: one exercise at a time; the long way before shortcuts; Claude reads
